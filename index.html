@@ -42,6 +42,13 @@
         const loader = new THREE.GLTFLoader();
         let model;
 
+        // Function to reset input values
+        function resetInputs() {
+            document.getElementById('height').value = 170;  // Reset to default height
+            document.getElementById('width').value = 50;    // Reset to default width
+            document.getElementById('length').value = 50;   // Reset to default length
+        }
+
         // Function to load model
         function loadModel(url) {
             if (model) {
@@ -51,6 +58,10 @@
                 model = gltf.scene;
                 scene.add(model);
                 camera.position.z = 5;
+
+                // Reset input values when loading a new model
+                resetInputs();
+
                 animate();  // Start the animation loop after the model is loaded
             }, undefined, function(error) {
                 console.error('An error occurred while loading the model:', error);
