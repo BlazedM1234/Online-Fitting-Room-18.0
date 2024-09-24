@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Viewer</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        .controls { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.8); padding: 10px; border-radius: 5px; }
+        .model-buttons { margin-bottom: 10px; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div class="controls">
+        <div class="model-buttons">
+            <button id="loadMaleModel">Load Male Model</button>
+            <button id="loadFemaleModel">Load Female Model</button>
+        </div>
+        <label>Height (cm): <input type="number" id="height" value="170" min="50" max="500" step="1"></label><br>
+        <label>Width (cm): <input type="number" id="width" value="50" min="20" max="300" step="1"></label><br>
+        <label>Length (cm): <input type="number" id="length" value="50" min="20" max="300" step="1"></label><br>
+        <label>Skin Color: <input type="color" id="skinColor" value="#ffffff"></label><br>
+    </div>
+
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(1, 1, 1).normalize();
+        scene.add(directionalLight);
+
+        const loader = new THREE.GLTFLoader();
+        let model;
+
+        // Function to load model
+        function loadModel(url) {
+            if (model) {
+                scene.remove(model);  // Remove existing model
+            }
+            loader.load(url, function(gltf) {
+                model = gltf.scene;
+                scene.add(model);
+                camera.position.z = 5;
+                animate();  // Start the animation loop after the model is loaded
+            }, undefined, function(error) {
+                console.error('An error occurred while loading the model:', error);
+            });
+        }
+
+        // Event listeners for model buttons
+        document.getElementById('loadMaleModel').addEventListener('click', function() {
+            loadModel('https://raw.githubusercontent.com/BlazedM1234/Online-Fitting-Room-18.0/main/men%20model%205%20blend%20copy.glb');
+        });
+
+        document.getElementById('loadFemaleModel').addEventListener('click', function() {
+            loadModel('https://raw.githubusercontent.com/BlazedM1234/Online-Fitting-Room-18.0/main/women%20model%2010.glb');
+        });
+
+        // Add OrbitControls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+
+        // Input listeners for height
+        document.getElementById('height').addEventListener('input', function() {
+            const height = parseFloat(this.value) / 100 || 1;
+            if (model) {
+                model.scale.set(model.scale.x, height, model.scale.z);
+            }
+        });
+
+        // Input listeners for width
+        document.getElementById('width').addEventListener('input', function() {
+            const width = parseFloat(this.value) / 100 || 1;
+            if (model) {
+                model.scale.set(width, model.scale.y, model.scale.z);
+            }
+        });
+
+        // Input listeners for length (Z-axis)
+        document.getElementById('length').addEventListener('input', function() {
+            const length = parseFloat(this.value) / 100 || 1;
+            if (model) {
+                model.scale.set(model.scale.x, model.scale.y, length);
+            }
+        });
+
+        // Input listeners for skin color
+        document.getElementById('skinColor').addEventListener('input', function() {
+            const color = this.value;
+            if (model) {
+                model.traverse(function(child) {
+                    if (child.isMesh && child.material) {
+                        child.material.color.set(color);
+                    }
+                });
+            }
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
